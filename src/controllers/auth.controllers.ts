@@ -68,7 +68,6 @@ export default class AuthController {
     catchAsync(async (req: Request, res: Response) => {
       const tokens = await AuthService.verifyEmail(req.body);
 
-      // Set refresh token in HTTP-only cookie
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -93,7 +92,6 @@ export default class AuthController {
     catchAsync(async (req: Request, res: Response) => {
       const tokens = await AuthService.login(req.body);
 
-      // Set refresh token in HTTP-only cookie
       res.cookie("refreshToken", tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
@@ -146,9 +144,8 @@ export default class AuthController {
    * @route POST /api/auth/refresh-token
    */
   static refreshToken = [
-    validate(refreshTokenSchema),
     catchAsync(async (req: Request, res: Response) => {
-      const refreshToken = req.body.refreshToken || req.cookies.refreshToken;
+      const refreshToken = req.cookies.refreshToken;
 
       if (!refreshToken) {
         return res.status(400).json({
@@ -156,7 +153,6 @@ export default class AuthController {
           message: "Refresh token is required",
         });
       }
-
       const tokens = await AuthService.refreshToken(refreshToken);
 
       res.cookie("refreshToken", tokens.refreshToken, {
@@ -179,7 +175,6 @@ export default class AuthController {
    * @route POST /api/auth/logout
    */
   static logout = catchAsync(async (req: Request, res: Response) => {
-    // Get refresh token from cookie
     const refreshToken = req.cookies.refreshToken;
 
     if (refreshToken) {
@@ -199,7 +194,7 @@ export default class AuthController {
    * @route POST /api/auth/resend-verification
    */
   static resendVerification = [
-    validate(forgotPasswordSchema), // Reusing the schema as it requires just email
+    validate(forgotPasswordSchema),
     catchAsync(async (req: Request, res: Response) => {
       const result = await AuthService.resendVerificationEmail(req.body.email);
       res.status(200).json({
