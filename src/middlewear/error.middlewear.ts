@@ -1,21 +1,19 @@
-import { Request, Response, NextFunction } from "express";
+import { ErrorRequestHandler } from "express";
 import { ApiError } from "../utils/api-errors";
 import logger from "../config/logger";
 
-const errorMiddleware = (
-  err: Error | ApiError,
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+const errorMiddleware: ErrorRequestHandler = (err, req, res, next) => {
+  console.log("Error middleware called:", err.message);
+
   if (err instanceof ApiError) {
     const { statusCode, message, isOperational } = err;
 
     if (isOperational) {
-      return res.status(statusCode).json({
+      res.status(statusCode).json({
         success: false,
         message,
       });
+      return;
     }
 
     logger.error("Unexpected error:", err);
@@ -23,7 +21,8 @@ const errorMiddleware = (
     logger.error("Unexpected error:", err);
   }
 
-  return res.status(500).json({
+  // No return needed here either
+  res.status(500).json({
     success: false,
     message: "Something went wrong",
   });
