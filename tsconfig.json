@@ -8,6 +8,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/scripts/user-onboard.js",
+    "src/**/*.ts",
+    "src/scripts/createOrganization.js",
+    "src/scripts/organization-onboard.js"
+  ],
   "exclude": ["node_modules"]
 }

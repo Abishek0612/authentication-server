@@ -1,11 +1,7 @@
-// src/services/user.services.ts
 import User from "../models/user.model";
 import { NotFoundError } from "../utils/api-errors";
 
 export default class UserService {
-  /**
-   * Get user by ID
-   */
   static async getUserById(userId: string) {
     const user = await User.findById(userId).select("-password");
     if (!user) {
@@ -14,17 +10,52 @@ export default class UserService {
     return user;
   }
 
-  /**
-   * Update user profile
-   */
   static async updateUserProfile(
     userId: string,
-    updateData: { name?: string }
+    updateData: { firstName?: string; lastName?: string; mobile?: string }
   ) {
     const user = await User.findByIdAndUpdate(
       userId,
       { $set: updateData },
       { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    return user;
+  }
+
+  static async getUsersByOrganization(organizationId: string) {
+    return User.find({ organization: organizationId })
+      .select("-password")
+      .sort({ createdAt: -1 });
+  }
+
+  static async changeUserRole(userId: string, role: string) {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      throw new NotFoundError("User not found");
+    }
+
+    return user;
+  }
+
+  /**
+   * Deactivate or activate a user
+   * This doesn't delete the user but can be used to control access
+   */
+  static async toggleUserStatus(userId: string, isActive: boolean) {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { isVerified: isActive },
+      { new: true }
     ).select("-password");
 
     if (!user) {

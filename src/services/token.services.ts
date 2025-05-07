@@ -4,18 +4,30 @@ import { Types } from "mongoose";
 import { environment } from "../config/environment";
 import Token from "../models/token.model";
 import { UnauthorizedError } from "../utils/api-errors";
-import { Tokens } from "../interface/user.interface";
+import { Tokens, TokenPayload, UserRole } from "../interface/user.interface";
+import User from "../models/user.model";
 
 export default class TokenService {
-  /**
-   * Generate access and refresh tokens
-   */
   static async generateTokens(userId: string): Promise<Tokens> {
-    const accessToken = jwt.sign({ userId }, environment.jwtAccessSecret, {
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    const tokenPayload: TokenPayload = {
+      userId,
+      role: user.role as UserRole,
+    };
+
+    if (user.organization) {
+      tokenPayload.organization = user.organization.toString();
+    }
+
+    const accessToken = jwt.sign(tokenPayload, environment.jwtAccessSecret, {
       expiresIn: environment.jwtAccessExpiresIn as any,
     });
 
-    const refreshToken = jwt.sign({ userId }, environment.jwtRefreshSecret, {
+    const refreshToken = jwt.sign(tokenPayload, environment.jwtRefreshSecret, {
       expiresIn: environment.jwtRefreshExpiresIn as any,
     });
 
@@ -35,15 +47,12 @@ export default class TokenService {
     };
   }
 
-  /**
-   * Verify refresh token and generate new tokens
-   */
   static async refreshTokens(refreshToken: string): Promise<Tokens> {
     try {
       const payload = jwt.verify(
         refreshToken,
         environment.jwtRefreshSecret
-      ) as { userId: string };
+      ) as TokenPayload;
 
       const tokenDoc = await Token.findOne({
         refreshToken,
@@ -66,9 +75,6 @@ export default class TokenService {
     }
   }
 
-  /**
-   * Invalidate all refresh tokens for a user
-   */
   static async revokeAllTokens(userId: string): Promise<void> {
     await Token.updateMany(
       { userId: new Types.ObjectId(userId), isActive: true },
@@ -76,9 +82,6 @@ export default class TokenService {
     );
   }
 
-  /**
-   * Generate random OTP
-   */
   static generateOTP(length = 6): string {
     return crypto.randomInt(100000, 999999).toString().padStart(length, "0");
   }

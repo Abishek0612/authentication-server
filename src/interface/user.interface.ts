@@ -1,13 +1,20 @@
 import mongoose from "mongoose";
 
+export enum UserRole {
+  USER = "USER",
+  ADMIN = "ADMIN",
+  SUPER_ADMIN = "SUPER_ADMIN",
+}
+
 export interface IUser {
-  __id: mongoose.Types.ObjectId;
-  name: string;
+  _id: mongoose.Types.ObjectId;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  isVerified: boolean;
-  verificationCode?: string;
-  verificationCodeExpires?: Date;
+  organization: mongoose.Types.ObjectId;
+  role: UserRole;
+  isFirstLogin: boolean;
   resetPasswordCode?: string;
   resetPasswordCodeExpires?: Date;
   createdAt: Date;
@@ -16,24 +23,9 @@ export interface IUser {
 
 export type UserDocument = Document & IUser;
 
-export interface RegisterInput {
-  name: string;
-  email: string;
-  password: string;
-}
-
 export interface LoginInput {
   email: string;
   password: string;
-}
-
-export interface VerifyEmailInput {
-  email: string;
-  otp: string;
-}
-
-export interface ForgotPasswordInput {
-  email: string;
 }
 
 export interface ResetPasswordInput {
@@ -44,6 +36,8 @@ export interface ResetPasswordInput {
 
 export interface TokenPayload {
   userId: string;
+  role: UserRole;
+  organization?: string;
 }
 
 export interface Tokens {

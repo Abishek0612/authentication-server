@@ -3,25 +3,12 @@ import Joi from "joi";
 import { validate } from "../middlewear/validation.middlewear";
 import AuthService from "../services/auth.services";
 import { catchAsync } from "../utils/catchAsync";
+import { AuthRequest } from "../interface/request.interface";
 
 // Validation schemas
-export const registerSchema = Joi.object({
-  name: Joi.string().required().min(2).max(50),
-  email: Joi.string().email().required(),
-  password: Joi.string().required().min(6).max(50),
-});
-
 export const loginSchema = Joi.object({
   email: Joi.string().email().required(),
   password: Joi.string().required(),
-});
-
-export const verifyEmailSchema = Joi.object({
-  email: Joi.string().email().required(),
-  otp: Joi.string()
-    .required()
-    .length(6)
-    .pattern(/^[0-9]+$/),
 });
 
 export const forgotPasswordSchema = Joi.object({
@@ -37,52 +24,11 @@ export const resetPasswordSchema = Joi.object({
   password: Joi.string().required().min(6).max(50),
 });
 
-export const refreshTokenSchema = Joi.object({
-  refreshToken: Joi.string().required(),
+export const changePasswordSchema = Joi.object({
+  password: Joi.string().required().min(6).max(50),
 });
 
 export default class AuthController {
-  /**
-   * Register a new user
-   * @route POST /api/auth/register
-   */
-  static register = [
-    validate(registerSchema),
-    catchAsync(async (req: Request, res: Response) => {
-      const result = await AuthService.register(req.body);
-      res.status(201).json({
-        success: true,
-        message:
-          "Registration successful. Please check your email for verification code.",
-        data: result,
-      });
-    }),
-  ];
-
-  /**
-   * Verify email with OTP
-   * @route POST /api/auth/verify-email
-   */
-  static verifyEmail = [
-    validate(verifyEmailSchema),
-    catchAsync(async (req: Request, res: Response) => {
-      const tokens = await AuthService.verifyEmail(req.body);
-
-      res.cookie("refreshToken", tokens.refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        sameSite: "strict",
-      });
-
-      res.status(200).json({
-        success: true,
-        message: "Email verified successfully",
-        data: { accessToken: tokens.accessToken },
-      });
-    }),
-  ];
-
   /**
    * Login user
    * @route POST /api/auth/login
@@ -90,9 +36,9 @@ export default class AuthController {
   static login = [
     validate(loginSchema),
     catchAsync(async (req: Request, res: Response) => {
-      const tokens = await AuthService.login(req.body);
+      const result = await AuthService.login(req.body);
 
-      res.cookie("refreshToken", tokens.refreshToken, {
+      res.cookie("refreshToken", result.tokens.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -102,7 +48,38 @@ export default class AuthController {
       res.status(200).json({
         success: true,
         message: "Login successful",
-        data: { accessToken: tokens.accessToken },
+        data: {
+          accessToken: result.tokens.accessToken,
+          isFirstLogin: result.isFirstLogin,
+          userId: result.userId,
+        },
+      });
+    }),
+  ];
+
+  /**
+   * Change first-time password
+   * @route POST /api/auth/change-password
+   */
+  static changeFirstTimePassword = [
+    validate(changePasswordSchema),
+    catchAsync(async (req: AuthRequest, res: Response) => {
+      if (!req.user) {
+        return res.status(401).json({
+          success: false,
+          message: "Authentication required",
+        });
+      }
+
+      const result = await AuthService.changeFirstTimePassword(
+        req.user._id.toString(),
+        req.body.password
+      );
+
+      res.status(200).json({
+        success: true,
+        message: "Password changed successfully",
+        data: result,
       });
     }),
   ];
@@ -114,7 +91,7 @@ export default class AuthController {
   static forgotPassword = [
     validate(forgotPasswordSchema),
     catchAsync(async (req: Request, res: Response) => {
-      const result = await AuthService.forgotPassword(req.body);
+      const result = await AuthService.forgotPassword(req.body.email);
       res.status(200).json({
         success: true,
         message: "Password reset instructions sent to your email",
@@ -188,20 +165,4 @@ export default class AuthController {
       message: "Logout successful",
     });
   });
-
-  /**
-   * Resend verification email
-   * @route POST /api/auth/resend-verification
-   */
-  static resendVerification = [
-    validate(forgotPasswordSchema),
-    catchAsync(async (req: Request, res: Response) => {
-      const result = await AuthService.resendVerificationEmail(req.body.email);
-      res.status(200).json({
-        success: true,
-        message: "Verification code resent. Please check your email.",
-        data: result,
-      });
-    }),
-  ];
 }

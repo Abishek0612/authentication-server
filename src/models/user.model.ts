@@ -1,25 +1,37 @@
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
+import { UserRole } from "../interface/user.interface";
 
-export interface IUser extends Document {
-  name: string;
+export interface IUser {
+  _id: mongoose.Types.ObjectId;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
-  isVerified: boolean;
-  verificationCode?: string;
-  verificationCodeExpires?: Date;
+  organization: mongoose.Types.ObjectId;
+  role: UserRole;
+  isFirstLogin: boolean;
   resetPasswordCode?: string;
   resetPasswordCodeExpires?: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IUserMethods {
   comparePassword(candidatePassword: string): Promise<boolean>;
-  compareVerificationCode(code: string): Promise<boolean>;
   compareResetCode(code: string): Promise<boolean>;
 }
 
-const userSchema = new Schema<IUser>(
+export type UserDocument = Document & IUser & IUserMethods;
+
+const userSchema = new Schema<IUser, {}, IUserMethods>(
   {
-    name: {
+    firstName: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    lastName: {
       type: String,
       required: true,
       trim: true,
@@ -36,15 +48,20 @@ const userSchema = new Schema<IUser>(
       required: true,
       minlength: 6,
     },
-    isVerified: {
-      type: Boolean,
-      default: false,
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
     },
-    verificationCode: {
+    role: {
       type: String,
+      enum: Object.values(UserRole),
+      default: UserRole.USER,
+      required: true,
     },
-    verificationCodeExpires: {
-      type: Date,
+    isFirstLogin: {
+      type: Boolean,
+      default: true,
     },
     resetPasswordCode: {
       type: String,
@@ -58,7 +75,6 @@ const userSchema = new Schema<IUser>(
   }
 );
 
-// Hash password before saving
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     try {
@@ -69,17 +85,6 @@ userSchema.pre("save", async function (next) {
     }
   }
 
-  // Hash verification code
-  if (this.isModified("verificationCode") && this.verificationCode) {
-    try {
-      const salt = await bcrypt.genSalt(8);
-      this.verificationCode = await bcrypt.hash(this.verificationCode, salt);
-    } catch (error) {
-      return next(error as Error);
-    }
-  }
-
-  // Hash reset password code
   if (this.isModified("resetPasswordCode") && this.resetPasswordCode) {
     try {
       const salt = await bcrypt.genSalt(8);
@@ -92,22 +97,12 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-// Method to compare password
 userSchema.methods.comparePassword = async function (
   candidatePassword: string
 ): Promise<boolean> {
   return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Method to compare verification code
-userSchema.methods.compareVerificationCode = async function (
-  candidateCode: string
-): Promise<boolean> {
-  if (!this.verificationCode) return false;
-  return bcrypt.compare(candidateCode, this.verificationCode);
-};
-
-// Method to compare reset password code
 userSchema.methods.compareResetCode = async function (
   candidateCode: string
 ): Promise<boolean> {
@@ -115,4 +110,7 @@ userSchema.methods.compareResetCode = async function (
   return bcrypt.compare(candidateCode, this.resetPasswordCode);
 };
 
-export default mongoose.model<IUser>("User", userSchema);
+export default mongoose.model<IUser, mongoose.Model<IUser, {}, IUserMethods>>(
+  "User",
+  userSchema
+);
