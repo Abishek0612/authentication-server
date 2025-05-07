@@ -18,23 +18,17 @@ const api_errors_1 = require("../utils/api-errors");
 const token_model_1 = __importDefault(require("../models/token.model"));
 const token_services_1 = __importDefault(require("./token.services"));
 class AuthService {
-    /**
-     * Login user
-     */
     static login(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, password } = input;
-            // Find user by email
             const user = yield user_model_1.default.findOne({ email }).populate("organization");
             if (!user) {
                 throw new api_errors_1.UnauthorizedError("Invalid email or password");
             }
-            // Check if password is correct
             const isPasswordValid = yield user.comparePassword(password);
             if (!isPasswordValid) {
                 throw new api_errors_1.UnauthorizedError("Invalid email or password");
             }
-            // Generate tokens
             const tokens = yield token_services_1.default.generateTokens(user._id.toString());
             return {
                 tokens,
@@ -43,9 +37,6 @@ class AuthService {
             };
         });
     }
-    /**
-     * Reset password
-     */
     static resetPassword(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const { email, otp, password } = input;
@@ -61,7 +52,6 @@ class AuthService {
                 throw new api_errors_1.BadRequestError("Invalid reset code");
             }
             yield token_services_1.default.revokeAllTokens(user._id.toString());
-            // Update password and mark user as not first login
             user.password = password;
             user.isFirstLogin = false;
             user.resetPasswordCode = undefined;
@@ -70,25 +60,18 @@ class AuthService {
             return { success: true };
         });
     }
-    /**
-     * First-time password change
-     */
     static changeFirstTimePassword(userId, newPassword) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield user_model_1.default.findById(userId);
             if (!user) {
                 throw new api_errors_1.NotFoundError("User not found");
             }
-            // Update password and mark as not first login
             user.password = newPassword;
             user.isFirstLogin = false;
             yield user.save();
             return { success: true };
         });
     }
-    /**
-     * Forgot password - send reset code
-     */
     static forgotPassword(email) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield user_model_1.default.findOne({ email });
@@ -105,20 +88,13 @@ class AuthService {
             return { email: user.email };
         });
     }
-    /**
-     * Refresh tokens using refresh token
-     */
     static refreshToken(refreshToken) {
         return __awaiter(this, void 0, void 0, function* () {
             return token_services_1.default.refreshTokens(refreshToken);
         });
     }
-    /**
-     * Logout user - invalidate refresh token
-     */
     static logout(refreshToken) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Find and invalidate the refresh token
             const tokenDoc = yield token_model_1.default.findOneAndUpdate({ refreshToken, isActive: true }, { isActive: false });
             if (!tokenDoc) {
                 throw new api_errors_1.UnauthorizedError("Invalid refresh token");

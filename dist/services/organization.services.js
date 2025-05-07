@@ -21,12 +21,10 @@ class OrganizationService {
     static createOrganization(input) {
         return __awaiter(this, void 0, void 0, function* () {
             const { name, code } = input;
-            // Check if organization with same code already exists
             const existingOrg = yield organization_model_1.default.findOne({ code });
             if (existingOrg) {
                 throw new api_errors_1.ConflictError(`Organization with code ${code} already exists`);
             }
-            // Create organization
             const organization = yield organization_model_1.default.create({
                 name,
                 code,
@@ -71,9 +69,6 @@ class OrganizationService {
             return organization;
         });
     }
-    /**
-     * Get all organizations
-     */
     static getAllOrganizations() {
         return __awaiter(this, void 0, void 0, function* () {
             return organization_model_1.default.find({});

@@ -15,9 +15,6 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const user_model_1 = __importDefault(require("../models/user.model"));
 const api_errors_1 = require("../utils/api-errors");
 class UserService {
-    /**
-     * Get user by ID
-     */
     static getUserById(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield user_model_1.default.findById(userId).select("-password");
@@ -27,15 +24,8 @@ class UserService {
             return user;
         });
     }
-    /**
-     * Update user profile
-     * This method allows updating the profile fields (firstName, lastName, mobile)
-     */
     static updateUserProfile(userId, updateData) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Find the user and update with the provided data
-            // Using { new: true } to return the updated document
-            // Using runValidators to ensure updates meet the schema validation rules
             const user = yield user_model_1.default.findByIdAndUpdate(userId, { $set: updateData }, { new: true, runValidators: true }).select("-password");
             if (!user) {
                 throw new api_errors_1.NotFoundError("User not found");
@@ -43,9 +33,6 @@ class UserService {
             return user;
         });
     }
-    /**
-     * Get users by organization ID
-     */
     static getUsersByOrganization(organizationId) {
         return __awaiter(this, void 0, void 0, function* () {
             return user_model_1.default.find({ organization: organizationId })
@@ -53,10 +40,6 @@ class UserService {
                 .sort({ createdAt: -1 });
         });
     }
-    /**
-     * Change user role
-     * This can be used by super admins or organization admins
-     */
     static changeUserRole(userId, role) {
         return __awaiter(this, void 0, void 0, function* () {
             const user = yield user_model_1.default.findByIdAndUpdate(userId, { role }, { new: true, runValidators: true }).select("-password");

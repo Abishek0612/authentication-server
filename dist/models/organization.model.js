@@ -56,7 +56,6 @@ const organizationSchema = new mongoose_1.Schema({
 }, {
     timestamps: true,
 });
-// Index for faster queries
 organizationSchema.index({ code: 1 });
 organizationSchema.index({ name: 1 });
 exports.default = mongoose_1.default.model("Organization", organizationSchema);

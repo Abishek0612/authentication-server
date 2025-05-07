@@ -21,7 +21,6 @@ const errorMiddleware = (err, req, res, next) => {
     else {
         logger_1.default.error("Unexpected error:", err);
     }
-    // No return needed here either
     res.status(500).json({
         success: false,
         message: "Something went wrong",

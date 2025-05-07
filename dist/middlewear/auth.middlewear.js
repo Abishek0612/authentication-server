@@ -27,7 +27,6 @@ const authenticateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         }
         const token = authHeader.split(" ")[1];
         const payload = jsonwebtoken_1.default.verify(token, environment_1.environment.jwtAccessSecret);
-        // Verify organization if not super admin and organization is in payload
         if (payload.role !== user_interface_1.UserRole.SUPER_ADMIN && payload.organization) {
             const organization = yield organization_model_1.default.findById(payload.organization);
             if (!organization || organization.status !== "active") {
@@ -38,7 +37,6 @@ const authenticateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
         if (!user) {
             throw new api_errors_1.UnauthorizedError("User not found");
         }
-        // Type cast to fix the type issue
         req.user = user.toObject();
         next();
     }
@@ -52,9 +50,6 @@ const authenticateUser = (req, res, next) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.authenticateUser = authenticateUser;
-/**
- * Middleware to check if user has required role
- */
 const requireRole = (roles) => {
     return (req, res, next) => {
         if (!req.user) {

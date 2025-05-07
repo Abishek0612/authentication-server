@@ -20,12 +20,8 @@ const token_model_1 = __importDefault(require("../models/token.model"));
 const api_errors_1 = require("../utils/api-errors");
 const user_model_1 = __importDefault(require("../models/user.model"));
 class TokenService {
-    /**
-     * Generate access and refresh tokens
-     */
     static generateTokens(userId) {
         return __awaiter(this, void 0, void 0, function* () {
-            // Get user to include role and organization in token
             const user = yield user_model_1.default.findById(userId);
             if (!user) {
                 throw new Error("User not found");
@@ -34,7 +30,6 @@ class TokenService {
                 userId,
                 role: user.role,
             };
-            // Add organization to payload if it exists
             if (user.organization) {
                 tokenPayload.organization = user.organization.toString();
             }
@@ -58,9 +53,6 @@ class TokenService {
             };
         });
     }
-    /**
-     * Verify refresh token and generate new tokens
-     */
     static refreshTokens(refreshToken) {
         return __awaiter(this, void 0, void 0, function* () {
             try {
@@ -84,17 +76,11 @@ class TokenService {
             }
         });
     }
-    /**
-     * Invalidate all refresh tokens for a user
-     */
     static revokeAllTokens(userId) {
         return __awaiter(this, void 0, void 0, function* () {
             yield token_model_1.default.updateMany({ userId: new mongoose_1.Types.ObjectId(userId), isActive: true }, { isActive: false });
         });
     }
-    /**
-     * Generate random OTP
-     */
     static generateOTP(length = 6) {
         return crypto_1.default.randomInt(100000, 999999).toString().padStart(length, "0");
     }
