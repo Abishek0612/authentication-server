@@ -1,9 +1,10 @@
 import mongoose, { Document, Schema } from "mongoose";
+import { Status } from "../interface/organization.interface";
 
 export interface IOrganization extends Document {
   name: string;
   code: string;
-  status: string;
+  status: Status;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -25,8 +26,8 @@ const organizationSchema = new Schema<IOrganization>(
     },
     status: {
       type: String,
-      enum: ["active", "inactive", "pending"],
-      default: "active",
+      enum: Object.values(Status),
+      default: Status.ACTIVE,
     },
   },
   {

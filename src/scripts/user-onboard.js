@@ -9,6 +9,7 @@ const logger = {
 const distPath = path.resolve(__dirname, "../../dist");
 
 const connectDB = require(path.join(distPath, "config/database")).default;
+const { Status } = require(path.join(distPath, "interface/user.interface"));
 
 const UserRole = {
   USER: "USER",
@@ -24,6 +25,7 @@ const users = [
     password: "test123",
     organizationCode: "MUL123",
     role: UserRole.ADMIN,
+    status: Status.ACTIVE,
   },
   {
     firstName: "Jane",
@@ -32,6 +34,7 @@ const users = [
     password: "test123",
     organizationCode: "TST456",
     role: UserRole.USER,
+    status: Status.ACTIVE,
   },
   {
     firstName: "Super",
@@ -40,6 +43,7 @@ const users = [
     password: "admin123",
     organizationCode: "MUL123",
     role: UserRole.SUPER_ADMIN,
+    status: Status.ACTIVE,
   },
 ];
 
@@ -99,3 +103,5 @@ const createUsers = async () => {
 };
 
 createUsers();
+
+// ! status ( in user schema)  ( enum: active, inactive, delete )

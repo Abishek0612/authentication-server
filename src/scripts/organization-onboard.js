@@ -8,18 +8,22 @@ const logger = {
 
 const distPath = path.resolve(__dirname, "../../dist");
 
-const connectDB = require(path.join(distPath, "config/database")).default;
+const connectDB = require(path.join(distPath, "config/database"));
+const { Status } = require(path.join(
+  distPath,
+  "interfaces/organization.interface"
+));
 
 const organizations = [
   {
     name: "Multifold",
     code: "MUL123",
-    status: "active",
+    status: Status.ACTIVE,
   },
   {
     name: "TestOrg",
     code: "TST456",
-    status: "active",
+    status: Status.ACTIVE,
   },
 ];
 
@@ -47,3 +51,5 @@ const createOrganizations = async () => {
 };
 
 createOrganizations();
+
+//? status ( enum: active, inactive, delete )

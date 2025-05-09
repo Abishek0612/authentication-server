@@ -6,6 +6,12 @@ export enum UserRole {
   SUPER_ADMIN = "SUPER_ADMIN",
 }
 
+export enum Status {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  DELETE = "delete",
+}
+
 export interface IUser {
   _id: mongoose.Types.ObjectId;
   firstName: string;
@@ -14,6 +20,7 @@ export interface IUser {
   password: string;
   organization: mongoose.Types.ObjectId;
   role: UserRole;
+  status: Status;
   isFirstLogin: boolean;
   resetPasswordCode?: string;
   resetPasswordCodeExpires?: Date;

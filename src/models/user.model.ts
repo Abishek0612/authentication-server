@@ -1,6 +1,6 @@
 import mongoose, { Document, Schema } from "mongoose";
 import bcrypt from "bcryptjs";
-import { UserRole } from "../interface/user.interface";
+import { Status, UserRole } from "../interface/user.interface";
 
 export interface IUser {
   _id: mongoose.Types.ObjectId;
@@ -10,6 +10,7 @@ export interface IUser {
   password: string;
   organization: mongoose.Types.ObjectId;
   role: UserRole;
+  status: Status;
   isFirstLogin: boolean;
   resetPasswordCode?: string;
   resetPasswordCodeExpires?: Date;
@@ -57,6 +58,12 @@ const userSchema = new Schema<IUser, {}, IUserMethods>(
       type: String,
       enum: Object.values(UserRole),
       default: UserRole.USER,
+      required: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(Status),
+      default: Status.ACTIVE,
       required: true,
     },
     isFirstLogin: {

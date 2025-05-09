@@ -1,7 +1,13 @@
+export enum Status {
+  ACTIVE = "active",
+  INACTIVE = "inactive",
+  DELETE = "delete",
+}
+
 export interface IOrganization {
   name: string;
   code: string;
-  status: boolean;
+  status: Status;
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -9,5 +15,5 @@ export interface IOrganization {
 export interface OrganizationInput {
   name: string;
   code: string;
-  status?: boolean;
+  status?: Status;
 }
