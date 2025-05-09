@@ -19,13 +19,13 @@ export const resetPasswordSchema = Joi.object({
   email: Joi.string().email().required(),
   otp: Joi.string()
     .required()
-    .length(6)
+    .length(5)
     .pattern(/^[0-9]+$/),
   password: Joi.string().required().min(6).max(50),
 });
 
 export const changePasswordSchema = Joi.object({
-  password: Joi.string().required().min(6).max(50),
+  password: Joi.string().required().min(5).max(50),
 });
 
 export default class AuthController {
